@@ -66,7 +66,7 @@ def main():
     # Abrir Twitter
     driver.get("https://twitter.com/elonmusk")
     # wait_until_tweets_appear(driver)
-    time.sleep(3)
+    time.sleep(20)
     body = driver.find_element(By.CSS_SELECTOR, 'body')
     body.send_keys(Keys.ENTER)
     #
@@ -79,7 +79,7 @@ def main():
     altura_anterior = 0
     altura = 400
     html_elementos = []
-    while len(twits_encontrados) < 3:
+    while len(html_elementos) < 75:
         # actions.send_keys(Keys.ENTER)
         # body = driver.find_element(By.CSS_SELECTOR, 'body')
         # for _ in range(randint(1, 3)):
@@ -94,18 +94,18 @@ def main():
             try:
                 elemento = tweet.get_attribute('innerHTML')
                 html_elementos.append(elemento)
-                status, tweet_url = find_status(tweet)
-                username = tweet_url.split("/")[3]
+                # status, tweet_url = find_status(tweet)
+                # username = tweet_url.split("/")[3]
                 # anchor = tweet.find_element(By.CSS_SELECTOR, "a[aria-label][dir]")
-                status = status[-1]
+                # status = status[-1]
                 # content_element = tweet.find_element(By.CSS_SELECTOR, 'div[lang]').text
-                content_element = tweet.find_element(By.CSS_SELECTOR, '[data-testid="tweetText"]').text
+                # content_element = tweet.find_element(By.CSS_SELECTOR, '[data-testid="tweetText"]').text
                 # print("*************")
                 # print(content_element)
-                twits_encontrados[status] = {
-                            "username": username,
-                            "content": content_element 
-                }
+                # twits_encontrados[status] = {
+                #             "username": username,
+                #             "content": content_element 
+                # }
             except Exception as e:
                 print(e)
 
@@ -117,6 +117,7 @@ def main():
         present_tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweet"]')
         present_tweets = [post for post in present_tweets if post not in all_ready_fetched_posts]
         all_ready_fetched_posts.extend(present_tweets)
+        print(f"Twets Encontrados: {len(html_elementos)}")
 
 
     for elemento in html_elementos:
