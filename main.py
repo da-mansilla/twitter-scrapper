@@ -9,14 +9,17 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.firefox.options import Options as CustomFireFoxOptions
 # BeautifulSoup
 from bs4 import BeautifulSoup
+# NLTK
+import nltk
 # Librerias
 import json
 import time
+from collections import Counter
 
 
 def main():
-    PERFIL_TWITTER = "elonmusk"
-    CANTIDAD_TWETTS = 75
+    PERFIL_TWITTER = "alferdez"
+    CANTIDAD_TWETTS = 15
     PATH_PERFIL_FIREFOX='/home/agustin/.mozilla/firefox/tgx4az00.default-release'
 
     driver = iniciar_driver(PERFIL_TWITTER,PATH_PERFIL_FIREFOX)
@@ -24,6 +27,8 @@ def main():
     html_elementos = extraer_tweets(driver,CANTIDAD_TWETTS)
 
     resultados = extraer_informacion_tweets(html_elementos)
+    
+    analizar_tweets(resultados)
 
     guardar_resultados(resultados)
 
@@ -156,6 +161,37 @@ def extraer_informacion_tweets(html_elementos):
 def guardar_resultados(resultados):
     with open("resultados.json","w") as file:
         json.dump(resultados,file)
+
+def analizar_tweets(tweets):
+    # Leer archivo con stop-words
+    with open('stop-words.txt', 'r') as exclusiones:
+        palabras_excluidas = exclusiones.read().splitlines()
+
+    # Almacenar informacion de las noticias en una unica variable
+    contenido_tweets = ""
+    for tweet in tweets:
+        contenido_tweets += tweet["contenido"].lower()
+
+    # Tokenizar texto
+    palabras_texto = nltk.word_tokenize(contenido_tweets)
+
+    # Eliminar stop stop-words
+    palabras_filtradas = list(filter(lambda palabra: palabra not in palabras_excluidas,palabras_texto))
+
+    # Eliminar palabras que solo son numeros
+    palabras_filtradas = list(filter(lambda palabra: not palabra.isnumeric() ,palabras_filtradas))
+
+    # Obtener las 100 palabras mas frecuentes
+    contador = Counter(palabras_filtradas)
+    top_10_palabras = contador.most_common(10)
+
+    # Agregar palabras mas comunes a un array
+    palabras_mas_comunes = []
+    for palabra in top_10_palabras:
+        palabras_mas_comunes.append(palabra[0])
+    print("Top 10 palabras mas comunes encontradas:")
+    for i,palabra in enumerate(palabras_mas_comunes):
+        print(f" {palabras_mas_comunes[i]}")
 
 def wait_until_tweets_appear(driver) -> None:
     try:
