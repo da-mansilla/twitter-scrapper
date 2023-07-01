@@ -1,49 +1,52 @@
-from requests.auth import HTTPProxyAuth
+# Selenium
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-import time
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
-from random import randint
 from selenium.webdriver.firefox.options import Options as CustomFireFoxOptions
+# BeautifulSoup
 from bs4 import BeautifulSoup
+# Librerias
 import json
+import time
 
 
 def main():
-    driver = iniciar_driver()
+    PERFIL_TWITTER = "elonmusk"
+    CANTIDAD_TWETTS = 75
 
-    html_elementos = extraer_tweets(driver)
+    driver = iniciar_driver(PERFIL_TWITTER)
+
+    html_elementos = extraer_tweets(driver,CANTIDAD_TWETTS)
 
     resultados = extraer_informacion_tweets(html_elementos)
 
     guardar_resultados(resultados)
 
-def iniciar_driver():
+def iniciar_driver(perfil):
+    # Iniciar driver con la configuracion de perfil propia
     browser_option = CustomFireFoxOptions()
     browser_option.add_argument('--profile=/home/agustin/.mozilla/firefox/tgx4az00.default-release')
-
     driver = webdriver.Firefox(service=FirefoxService(executable_path=GeckoDriverManager().install()), options=browser_option)
     
-    # Abrir Twitter
-    driver.get("https://twitter.com/elonmusk")
+    # Abrir Perfil de Twitter
+    driver.get(f"https://twitter.com/{perfil}")
 
     return driver
 
-def extraer_tweets(driver):
+def extraer_tweets(driver,cantidad_twetts):
     # Definir la distancia del scroll automatico
-    altura = 400
+    distancia_scroll = 600
     
     # Extraer los primeros tweets
     all_ready_fetched_posts = []
     present_tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweet"]')
     all_ready_fetched_posts.extend(present_tweets)
     html_elementos = []
-    while len(html_elementos) < 10:
+    while len(html_elementos) < cantidad_twetts:
         for tweet in present_tweets:
             try:
                 # Almacenar el contenido HTML
@@ -53,8 +56,8 @@ def extraer_tweets(driver):
                 print(e)
 
         # Scroll pagina
-        driver.execute_script(f"window.scrollTo(0, {altura});")
-        altura += 400
+        driver.execute_script(f"window.scrollTo(0, {distancia_scroll});")
+        distancia_scroll += 400
 
         # Realizar una espera
         wait_until_completion(driver)
@@ -66,7 +69,7 @@ def extraer_tweets(driver):
         # Guardar unicamente lo twits nuevos
         present_tweets = [post for post in present_tweets if post not in all_ready_fetched_posts]
         all_ready_fetched_posts.extend(present_tweets)
-        print(f"Twets Encontrados: {len(html_elementos)}")
+        print(f"Tweets Encontrados: {len(html_elementos)}...")
     return html_elementos
 
 def extraer_informacion_tweets(html_elementos):
@@ -78,7 +81,6 @@ def extraer_informacion_tweets(html_elementos):
         with open("elemento.html") as archivo:
             soup = BeautifulSoup(archivo, "html.parser")
             # Cabecera Tweet
-            print("Cabecera")
             cabeceras = soup.find_all('div', attrs={'data-testid': 'User-Name'})
             for cabecera in cabeceras:
                 etiquetas_a = cabecera.find_all('a')
@@ -155,24 +157,20 @@ def guardar_resultados(resultados):
         json.dump(resultados,file)
 
 def wait_until_tweets_appear(driver) -> None:
-    """Wait for tweet to appear. Helpful to work with the system facing
-    slow internet connection issues
-    """
     try:
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, '[data-testid="tweet"]')))
     except WebDriverException:
-        print("Tweets did not appear!, Try setting headless=False to see what is happening")
+        print("Error esperando carga de tweets")
 
 def wait_until_completion(driver) -> None:
-    """waits until the page have completed loading"""
     try:
         state = ""
         while state != "complete":
-            time.sleep(randint(3, 5))
+            time.sleep(3)
             state = driver.execute_script("return document.readyState")
-    except Exception as ex:
-        print('Error at wait_until_completion: {}'.format(ex))
+    except Exception :
+        print('Error esperando carga de la pagina')
 
 
 main()
