@@ -17,8 +17,9 @@ import time
 def main():
     PERFIL_TWITTER = "elonmusk"
     CANTIDAD_TWETTS = 75
+    PATH_PERFIL_FIREFOX='/home/agustin/.mozilla/firefox/tgx4az00.default-release'
 
-    driver = iniciar_driver(PERFIL_TWITTER)
+    driver = iniciar_driver(PERFIL_TWITTER,PATH_PERFIL_FIREFOX)
 
     html_elementos = extraer_tweets(driver,CANTIDAD_TWETTS)
 
@@ -26,14 +27,14 @@ def main():
 
     guardar_resultados(resultados)
 
-def iniciar_driver(perfil):
+def iniciar_driver(perfil_twitter,path_perfil_firefox):
     # Iniciar driver con la configuracion de perfil propia
     browser_option = CustomFireFoxOptions()
-    browser_option.add_argument('--profile=/home/agustin/.mozilla/firefox/tgx4az00.default-release')
+    browser_option.add_argument(f'--profile={path_perfil_firefox}')
     driver = webdriver.Firefox(service=FirefoxService(executable_path=GeckoDriverManager().install()), options=browser_option)
     
     # Abrir Perfil de Twitter
-    driver.get(f"https://twitter.com/{perfil}")
+    driver.get(f"https://twitter.com/{perfil_twitter}")
 
     return driver
 
